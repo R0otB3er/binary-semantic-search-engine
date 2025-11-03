@@ -1,0 +1,19 @@
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Build
+build/
+out/
+*.o
+*.a
+*.so
+*.dll
+*.exe
+
+*.xslx
+
+binary_engine/build/output/
+semantic_engine/build/output/
