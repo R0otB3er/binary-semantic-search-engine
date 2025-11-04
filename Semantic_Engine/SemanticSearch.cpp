@@ -1,5 +1,4 @@
 #include "glove/glove.h"
-#include "glove/hashmap.c"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -20,35 +19,39 @@ struct CompareByScore{
 };
 
 
-std::vector<data> glove_compare_all_cosine(glove* instance, const char* target_word, int list_size){
+std::vector<data> glove_compare_all_cosine(glove* instance, const char* target_word, int list_size, float min_score){
     std::priority_queue<data, std::vector<data>, CompareByScore> minHeap;
     std::vector<data> closest_words;
     float* target_embedding = glove_get_embedding(instance, target_word);
+
+    std::cout << "starting search... \n";
 
     for(size_t i = 0 ; i < instance->table->num_buckets; i++) {
         bucket_item* cur_node = instance->table->buckets[i].next_item;
 
         while (cur_node){
-            float* cur_score;
+            float cur_score;
             
-            if(cur_node->word == target_word){
+            if(*(cur_node->word) == *target_word){
                 cur_node = cur_node->next_item;
                 continue;
             }
             
             float* cur_embedding = glove_get_embedding(instance, cur_node->word);
             
-            glove_compare_cosine_given_embedding(instance, cur_embedding, target_embedding, cur_score);
+            glove_compare_cosine_given_embedding(instance, cur_embedding, target_embedding, &cur_score);
 
-            if(minHeap.size < list_size){
+            if(cur_score > min_score) {
+                if(minHeap.size() < list_size){
 
-                minHeap.push(data(*(cur_node->word), *cur_score));
-            }
-             else {
-            
-                if (*cur_score > minHeap.top().score){
-                    minHeap.pop();
-                    minHeap.push(data(*(cur_node->word), *cur_score));
+                    minHeap.push(data(cur_node->word, cur_score));
+                }
+                else {
+                
+                    if (cur_score > minHeap.top().score){
+                        minHeap.pop();
+                        minHeap.push(data(cur_node->word, cur_score));
+                    }
                 }
             }
 
@@ -70,20 +73,34 @@ int main(){
     glove* instance = glove_create("./WordVectors.txt", 1200000, 100);
     std::vector<data> closest_words;
     char word1[80];
+    char response = 'y';
+    float min_score;
 
-    std::cout << "Table Made \n";
-
-    std::cout << "Words to compare:";
+    while(1){
+        std::cout << "Words to compare:";
     
-    std::cin >> word1;
+        std::cin >> word1;
 
-    closest_words = glove_compare_all_cosine(instance, word1, 15);
+        std::cout << "Minimum score:";
+    
+        std::cin >> min_score;
 
-    std::cout << "15 closest words: \n";
+        closest_words = glove_compare_all_cosine(instance, word1, 15 , min_score);
 
-    for(int i = 0; i < 15; i++){
-        std::cout << closest_words[i].word << ": " << closest_words[i].score << " \n";
+        std::cout << "closest words: \n";
+
+        for(int i = 0; i < closest_words.size(); i++){
+            std::cout << closest_words[i].word << ": " << closest_words[i].score << " \n";
+        }
+
+        std::cout << "continue?\n>";
+        std::cin >> response;
+
+        if(response == 'n'){
+            break;
+        }
     }
+    
 
 
 

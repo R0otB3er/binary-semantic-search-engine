@@ -31,6 +31,18 @@ typedef struct {
     struct hashtable* table;
 } glove;
 
+struct bucket_item {
+    char*               word;
+    size_t              index;
+    struct bucket_item* next_item;
+};
+
+struct hashtable {
+    struct bucket_item* buckets;
+    size_t              num_buckets;
+    size_t              num_items;
+};
+
 /**
  * @brief Creates a new instance of `glove`
  * @param filename Path to `vectors.txt` or the text file containing the
