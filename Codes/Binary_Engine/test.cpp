@@ -2,6 +2,8 @@
 #include <vector>
 #include <OpenXLSX.hpp>
 #include <sstream>
+#include <string>
+#include <fstream>
 
 using namespace OpenXLSX;
 
@@ -117,21 +119,56 @@ class SearchEngine {
         };
 };
 
+void testing(){
+    XLDocument doc;
+    doc.open("./reviews_segment.xlsx");
+    auto table = doc.workbook().worksheet("Sheet1");
+    std::vector<XLCellValue> readValues;
+    int count = 0;
+    
+    for (auto& row : table.rows()) {
+        readValues = row.values(); 
+        std::string tempA = readValues[0]; 
+
+        std::cout << "row " << count << " : " << tempA.substr(1, tempA.length() - 2);
+
+        std::cout << "\n";
+
+        if(count++ == 5){
+            break;
+        }
+        
+        //std::cout << reviews[i].review_id << " : " << reviews[i].review_title << std::endl;
+    }
+
+    doc.close();
+}
+
 
 
 int main() {
-    SearchEngine engine;
-    std::vector<review> reviews;
+    // SearchEngine engine;
+    // std::vector<review> reviews;
 
-    pullReviews(reviews, 1000, "./reviews_segment.xlsx");
-    engine.buildEngine(reviews);
+    // pullReviews(reviews, 1000, "./reviews_segment.xlsx");
+    // engine.buildEngine(reviews);
 
-    std::vector<std::string> results = engine.search("software");
+    // std::vector<std::string> results = engine.search("software");
 
-    std::cout << "Reviews containing 'software':\n";
-    for (const std::string& review : results) {
-        std::cout << "  " << review << std::endl << std::endl;
-    }
+    // std::cout << "Reviews containing 'software':\n";
+    // for (const std::string& review : results) {
+    //     std::cout << "  " << review << std::endl << std::endl;
+    // }
+
+    //testing();
+
+    std::ofstream outFile("../../../Outputs/testing.txt");
+
+    
+    outFile << "fag";
+    
+
+    outFile.close();
 
     return 0;
 }

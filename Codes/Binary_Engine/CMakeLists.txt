@@ -10,5 +10,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
 add_subdirectory(OpenXLSX)
 
-add_executable(MyProject BinarySearch.cpp)
-target_link_libraries(MyProject OpenXLSX::OpenXLSX)
+add_executable(BinaryEngine BinarySearch.cpp)
+target_link_libraries(BinaryEngine OpenXLSX::OpenXLSX)
+
+target_compile_options(BinaryEngine PRIVATE -Wall -Wextra -Wpedantic)
