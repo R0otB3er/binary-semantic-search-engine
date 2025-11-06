@@ -3,6 +3,7 @@
 #include <OpenXLSX.hpp>
 #include <sstream>
 #include <fstream>
+#include <cstdlib>
 
 using namespace OpenXLSX;
 
@@ -117,7 +118,7 @@ class SearchEngine {
                 // Tokenize title and text
                 auto tokens = tokenize(cur.review_title + " " + cur.review_text +  " " + cur.review_item);
 
-                std::string cleanReview = cur.review_title + ": " + cur.review_text;
+                std::string cleanReview = "("+ cur.review_item + ") " + cur.review_title + ": " + cur.review_text;
 
                 // Add each review to the DB
                 reviewMap[cur.review_id] = cleanReview;
@@ -130,7 +131,7 @@ class SearchEngine {
 
         };
 
-        void search(const std::string& query) {
+        void search(const std::string& query, bool check_precision) {
             std::vector<std::string> results;
             //auto tokens = tokenize(query);
             std::string aspects;
@@ -153,13 +154,13 @@ class SearchEngine {
             
             removeSpaces(aspects);
 
-            Test1(&aspectOut, &aspects);
-            Test2(&aspectOut, &opinionOut, &aspects);
-            Test3(&aspectOut, &opinionOut, &aspects);
+            Test1(&aspectOut, &aspects, check_precision);
+            Test2(&aspectOut, &opinionOut, &aspects, check_precision);
+            Test3(&aspectOut, &opinionOut, &aspects, check_precision);
             
         };
 
-        void Test1(std::vector<std::string>* aspectOut, std::string* aspects){
+        void Test1(std::vector<std::string>* aspectOut, std::string* aspects, bool check_precision){
             
             std::ofstream outFile("../../../../Outputs/" + *aspects + "_test1.txt");
 
@@ -168,9 +169,13 @@ class SearchEngine {
             }
 
             outFile.close();
+
+            if(check_precision){
+                estimatePrecision(aspectOut);
+            }
         }
         
-        void Test2(std::vector<std::string>* aspectOut, std::vector<std::string>* opinionOut, std::string* aspects){
+        void Test2(std::vector<std::string>* aspectOut, std::vector<std::string>* opinionOut, std::string* aspects, bool check_precision){
             std::vector<std::string> results;
             results.reserve( aspectOut->size() + opinionOut->size() );
             
@@ -183,9 +188,13 @@ class SearchEngine {
             }
 
             outFile.close();
+
+            if(check_precision){
+                estimatePrecision(&results);
+            }
         }
         
-        void Test3(std::vector<std::string>* aspectOut, std::vector<std::string>* opinionOut, std::string* aspects){
+        void Test3(std::vector<std::string>* aspectOut, std::vector<std::string>* opinionOut, std::string* aspects, bool check_precision){
             std::vector<std::string> results;
             results.reserve( aspectOut->size() + opinionOut->size() );
             results.insert( results.end(), aspectOut->begin(), aspectOut->end());
@@ -202,6 +211,40 @@ class SearchEngine {
             }
 
             outFile.close();
+
+            if(check_precision){
+                estimatePrecision(&results);
+            }
+        }
+
+        void estimatePrecision(std::vector<std::string>* results){
+            char response;
+            bool valid = false;
+            int relevant_counter = 0;
+            for(int i = 0; i < 100; i++){
+                size_t randomID = rand() % results->size();
+                std::cout<< reviewMap[(*results)[randomID]] << "\n\nIs this review relevant?(y/n)";
+
+                while(!valid){
+                    std::cout<< "\n>";
+                    std::cin>> response;
+
+                    if((response == 'y') || (response == 'n')){
+                        valid = true;
+                    }
+                }
+                valid = false;
+
+                if(response == 'y'){
+                    relevant_counter++;
+                }
+
+                std::cout << "\n\n";
+            }
+
+            int relevant_reviews = results->size() * relevant_counter / 100;
+
+            std::cout << "calculated precision: " << relevant_counter << "% or " << relevant_reviews << "/" << results->size();
         }
 };
 
@@ -210,17 +253,19 @@ class SearchEngine {
 int main() {
     SearchEngine engine;
     std::vector<review> reviews;
-    std::vector<std::string> searches = {"phone screen:issues", 
-                                        "battery life:long",
-                                        "wifi signal:weak",
-                                        "mouse button:great",
-                                        "printer ink:expensive" };
+    // std::vector<std::string> searches = {"phone screen:issues", 
+    //                                     "battery life:long",
+    //                                     "wifi signal:weak",
+    //                                     "mouse button:great",
+    //                                     "printer ink:expensive" };
+
+    std::vector<std::string> searches = {"phone screen:issues"};
 
     pullReviews(reviews, "./reviews_segment.xlsx");
     engine.buildEngine(reviews);
 
     for(auto search: searches){
-        engine.search(search);
+        engine.search(search, true);
     }
     
 
